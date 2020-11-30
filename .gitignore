@@ -3,4 +3,4 @@ training_data/
 temp/
 
 # ssh keys
-*rsa* 
+/tencent cloud vm/ 
