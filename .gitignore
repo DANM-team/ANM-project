@@ -1,3 +1,6 @@
 .vscode/
 training_data/    
 temp/
+
+# ssh keys
+*rsa* 
