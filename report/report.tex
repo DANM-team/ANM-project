@@ -1,0 +1,159 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2020
+
+% ready for submission
+% \usepackage{neurips_2020}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+    % \usepackage[preprint]{neurips_2020}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+    \usepackage[final]{neurips_2020}
+
+% to avoid loading the natbib package, add option nonatbib:
+    %  \usepackage[nonatbib]{neurips_2020}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\usepackage{amsmath}        % math equations
+\usepackage{amssymb}        % math symboles (R, C,...)
+\usepackage{amsthm}         % math proof, theorem...
+\usepackage{bm}             % pmb (for bold chars in math mode)
+\usepackage{xfrac}          % {sfrac}
+
+\title{ANM  Project \\ DANM! Team}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+ Fabien RAVET\\
+ studentNo\\
+ \texttt{email@mails.tsinghua.edu.cn}
+ \And
+ Aleksander\\
+ studentNo\\
+  \texttt{email@mails.tsinghua.edu.cn}
+ \And
+ Aurélien VU NGOC\\
+ 2020280219\\
+ \texttt{vunaa10@mails.tsinghua.edu.cn}
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+\begin{document}
+
+\maketitle
+
+% ABSTRACT
+% \begin{abstract}
+% \end{abstract}
+
+
+
+main guideline: start simple and build more advanced method later depending on the previous results and performance
+
+\section{Exploratory Data Analysis (EDA)}
+    \subsection{Trace}
+    trace: very large data that cannot be imported as a single dataframe. 
+    \begin{itemize}
+        \item Use dask.dataframe package. it's an memory-optimized version of pandas' dataframe\footnote{\url{dask.org}}
+        \item Divide and conquer approach: divide the data into chunks using the read-csv(..., chunksize=10000) option implemented in pandas. However, one needs to concatenate all the chunks in the end. Unless the processing method can be applied to different chunks separately, this method is not useful
+        \item reduce-mem-usage function used many times in kaggle competition\footnote{e.g. \url{www.kaggle.com/gemartin/load-data-reduce-memory-usage}}. However, trace dataframe has few numerical data (int or float), so this trick is not very effective because it only reduces the memory usage of numerical data. There can also be the solution to transform object into pd.Categorical, which is less stressful for the memory. This would be a way because we know there is a limited amount of unique values in the columns.
+        \item Since the trace data is only used for root cause after anomaly detection, we can imagine loading only a part of it (around the same timestamp as the detected outlier) to free up memory
+    \end{itemize}
+
+    \subsection{esb}
+    esb has 3 main components:
+    \begin{itemize}
+        \item start time: start time of the event
+        \item avg time: average time of processing
+        \item succee rate: sucess rate
+    \end{itemize}
+    Findings: unfortunately, succee rate only has 1.0, which means in all the collected data that can be used for training, there is no anomaly that can be detected through success rate, as suggested in the project description. We have the following question: is it because there is no anomaly, or is it because anomalies are meant to be detected using another methode ?
+    In any case, we tried to detect anomalies using avg time. 
+
+\section{Anomaly detection}
+    \subsection{What input should be considered during the anomaly detection process ?}
+    Since we are given a lot of performance indicators, which one is the best for the anomaly detection process ?
+    Let's start with avg time, which seems a good indicator. We imagine, if the average time of processing rises above a given threshold, then: 
+    \begin{itemize}
+        \item probabilistic approach: "chance of anomaly are high"
+        \item direct approach: "there is an anomaly"
+    \end{itemize}
+
+    \subsection{Statistical methods}
+        \subsubsection{Exponential smoothing, ...}
+            Simple exponential smoothing, Holwinter exponential smoothing (triple exponential smoothing), and derived methods cannot be applied here because the data is not periodic. 
+            Nevertheless, we tried to implement these methods anyway by assuming different frequencies for the time series. Since the data is collected every 1 minute, and that we are given 24h of data, we can assume an hour periodicity, half-an-hour periodicity, 3h periodicity... Besides, because the anomalies must be 10 minutes apart (according to the project description), maybe a periodicity of 10minutes is to be considered ?
+            \footnote{\url{https://medium.com/@jetnew/anomaly-detection-of-time-series-data-e0cb6b382e33}}
+        
+        \subsubsection{Simple moving average, moving std}
+            We tried to implement a simple moving average and a simple moving std (standard deviation) to tackle the detection problem.
+            \footnote{\url{AutoRegressive Integrated Moving Average}}
+
+        \subsubsection{ARIMA}
+            ARIMA = AutoRegressive Integrated Moving Average
+            \begin{itemize}
+                \item simple ARIMA with all the data
+                \item iterative ARIMA (rolling forecast ARIMA model)
+            \end{itemize}
+            \footnote{\url{https://machinelearningmastery.com/arima-for-time-series-forecasting-with-python/}}
+
+    \subsection{QUESTIONS}
+    which one is good ?
+    how do we check if the model correctly detect anomalies ?
+
+    \subsection{Unsupervised learning methods}
+    Because we have no labels in the data (unless we label it by hand, but we would be left with only few data), it is impossible to use supervised learning in order to achieve anomaly detection.
+    \footnote{again: \url{https://medium.com/@jetnew/anomaly-detection-of-time-series-data-e0cb6b382e33}}
+
+
+    \subsection{Hybrid methods}
+    Why not use both methods and apply them to different 
+    Maybe combined with a probabilistic approach with every method giving a probability of anomaly, and then by combining all the results, we can determine if there is actually an anomaly. This will allow us to weight the models (e.g. if ARIMA says that there's an anomaly, it is most likely correct compared to Decision Tree saying there is no)
+
+\section{Root cause}
+    \subsection{QUESTIONS}
+    what model should be used ?
+    How can I see a root cause myself ? What does it look like ? (meaning, what if I am the algorithm that is trying to find the root cause)
+    supervised learning methods ? (==> no labels unfortunately...)
+            
+\end{document}
