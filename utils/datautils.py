@@ -6,7 +6,7 @@ import math
 import gc
 
 from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 class DataUtils:
     def __init__(self, verbose=False):
@@ -192,7 +192,7 @@ class DataUtils:
         # Shift data and create even more features (e.g. 'CPU_used (t-3min)')
         #  while creating supervised_dataset
         supervised_dataset = temp_df.reset_index()
-        for i in range(w_length, 0, -w_period):
+        for i in range(1, w_length + w_period, w_period):
             s = temp_df.shift(periods=i, freq=w_time_unit)
             s.columns = ["{}(t-{}{:s})".format(_n, i, w_time_unit) for _n in s.columns]
             s.reset_index(inplace=True)
@@ -211,6 +211,39 @@ class DataUtils:
 
         return supervised_dataset
     
+    def to_multiindex(self, df, unique_kpi, w_period, w_time_unit, w_length):
+        # pandas multi index
+        time_idx = ["t"] + [f"t-{i}{w_time_unit}" for i in range(1, w_length + w_period, w_period)]
+        idx = pd.MultiIndex.from_product([time_idx, unique_kpi], names=['time', 'kpi'])
+        
+        # values
+        vals = df.loc[:, ~df.columns.isin(['hour', 'cmdb_id'])].values
+
+        # transform to multi index
+        multiindex_supervised_dataset = pd.DataFrame(vals, columns=idx)
+
+        return multiindex_supervised_dataset
+    
+    def to_tensor(self, multi_df, w_length):
+        # shape = (samples, timesteps, features)
+        shape = (multi_df['t'].shape[0], w_length+1, multi_df['t'].shape[1])
+        tensor = multi_df.values.reshape(shape)
+        return tensor
+    
+    def transform_to_lstm_data(self, df, unique_kpi, w_period, w_time_unit, w_length, scaler=None):
+        # supervised dataset
+        supervised_dataset = self.add_timeseries_features(df, w_period, w_time_unit, w_length)
+        supervised_dataset.drop('cmdb_id', axis=1, inplace=True)
+
+        if scaler:
+            scaled_supervised_dataset = pd.DataFrame(scaler.fit_transform(supervised_dataset.values), columns=supervised_dataset.columns)
+            multi_supervised_dataset = self.to_multiindex(scaled_supervised_dataset, unique_kpi, w_period, w_time_unit, w_length)
+        else :
+            multi_supervised_dataset = self.to_multiindex(supervised_dataset, unique_kpi, w_period, w_time_unit, w_length)
+
+        tensor = self.to_tensor(multi_supervised_dataset, w_length)
+        return tensor
+            
     def create_ts_files(self, df, history_length, step_size, lag_unit, target_step, data_folder, num_rows_per_file):
         """ like add_timeseries_features but creates files along the way """
         # Check parameters
