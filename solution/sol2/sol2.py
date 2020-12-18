@@ -14,7 +14,9 @@ import pickle
 
 import os           # os.listdir()
 
-import dask.dataframe as dd
+from sklearn.preprocessing import LabelEncoder
+
+from datautils import DataUtils, DataStats
 
 class Detector():
     def __init__(self):
@@ -22,15 +24,22 @@ class Detector():
         self.models = {}    # dict indexed by _nodes
         for _file in os.listdir(os.fsencode('./')):
             filename = os.fsdecode(_file)
-            if filename.endswith('.sav'):
-                node = os.path.basename(filename).split('.')[0]
-                self.models[node] = pickle.load(open(filename, 'rb'))
+            if filename.endswith('.pkl'):
+                print(">Loading {}".format(filename))
+                self.model = pickle.load(open(filename, 'rb'))
 
         # data
         self.esb_df = pd.DataFrame(columns=['service_name', 'start_time', 'startTime', 'avg_time', 'num', 'succee_num', 'succee_rate', 'time'])
         self.host_df = pd.DataFrame(columns=['item_id', 'name', 'bomc_id', 'timestamp', 'value', 'cmdb_id'])
         self.trace_df = pd.DataFrame(columns=['call_type', 'start_time', 'elapsed_time', 'success', 'trace_id', 'id', 'pid', 'cmdb_id', 'service_name', 'ds_name'])
-    
+
+        # # label encoder
+        # self.node_le = LabelEncoder()
+        # self.kpi_le = LabelEncoder()
+
+        # Data Utils
+        self.data_utils = DataUtils()
+
     def appendData(self, message):
         data = json.loads(message.value.decode('utf8'))
         if message.topic == 'platform-index':
@@ -108,95 +117,42 @@ class Detector():
         self.host_df = pd.DataFrame(columns=['item_id', 'name', 'bomc_id', 'timestamp', 'value', 'cmdb_id'])
         self.trace_df = pd.DataFrame(columns=['call_type', 'start_time', 'elapsed_time', 'success', 'trace_id', 'id', 'pid', 'cmdb_id', 'service_name', 'ds_name'])        
 
-    def _makePredictions(self):
-        N_IN = 5  # use data up to 5 minutes before detection
-        FREQ = 'min'
-        predictions_df = pd.DataFrame(
-            columns=['timestamp', 'target_node', 'target_kpi', 'target_value', 'prediction'])
-
-        # === gather data ===
-        data = self.host_df[['name', 'cmdb_id', 'timestamp', 'value']]
-        data['timestamp'] = data['timestamp'].dt.round(
-            '60s')  # reduce precision of timestamp
-        data['hour'] = data['timestamp'].dt.hour
-
-        # === for each node: ===
-        for _node in data['cmdb_id'].unique():
-            # === transform data to be interpretable by xgboost ===
-            d = data[data['cmdb_id'] == _node][[
-                'name', 'timestamp', 'value', 'hour']]
-
-            ## pivot data: create columns out of every kpi 'name'
-            pivot_d = pd.pivot_table(d, index='timestamp',
-                                     columns='name', values='value', dropna=True)
-            percent_missing = pivot_d.isnull().sum() * 100 / len(pivot_d)
-            # drop columns that have too much missing values
-            pivot_d = pivot_d.loc[:, percent_missing < 50]
-
-            ## shift data to have past values of kpis as columns
-            arr_of_df_with_past_values = []
-            for i in range(N_IN, 0, -1):
-                temp_df = pivot_d.shift(periods=i, freq=FREQ)
-                temp_df.columns = ["{} (t-{}min)".format(_n, i)
-                                   for _n in temp_df.columns]
-                # drop rows that are empty
-                temp_df.dropna(axis=0, how='all', inplace=True)
-                arr_of_df_with_past_values.append(temp_df)
-
-            # === make a prediction for every kpi ===
-            for _kpi in pivot_d.columns:
-                ## current values of other kpis (not the one we are going to predict)
-                test_df = pd.concat(arr_of_df_with_past_values +
-                                    [pivot_d.loc[:, pivot_d.columns != _kpi]])
-                test_df['target_kpi'] = _kpi        # fills target_kpi colum
-                test_df['target_value'] = pivot_d[_kpi]
-
-                ## categorize data
-                test_df['target_kpi'] = test_df['target_kpi'].astype(
-                    'category')
-                test_df = pd.get_dummies(
-                    test_df, columns=['target_kpi'], prefix=['tgt_kpi'])
-
-                test_df = test_df.reset_index()
-                timestamp = test_df.reset_index()['timestamp'].max()
-                # drop timestamp column
-                test_df = test_df.drop(columns=['timestamp'])
-
-                ## make prediction
-                testX = test_df.loc[:, test_df.columns != 'target_value']
-                predict_y = self.models[_node].predict(testX)
-
-                ## save predictions
-                predictions_df.append({
-                    'timestamp': [timestamp],
-                    'target_node': [_node],
-                    'target_kpi': [_kpi],
-                    'target_value': test_df.loc['target_value'],
-                    'prediction': predict_y
-                })
-
-        # Finally, set self.predictions
-        self.predictions = predictions_df        
-
     def detect(self):
-        # make predictions
-        self._makePredictions()
+        # TRANSFORM DATA
+        unique_kpi = self.host_df['name'].unique()
+        test = self.data_utils.add_timeseries_features(self.host_df, 1, 'min', 5)
+        test['cmdb_id'] = self.data_utils.node_le.fit_transform(test['cmdb_id'])
+        X = test.loc[:, ~test.columns.isin(unique_kpi)]
+        y = np.log1p(test.loc[:, test.columns.isin(unique_kpi)])
+
+        assert X.shape[0] > 0, "X is empty!"
+        assert y.shape[0] > 0, "y is empty!"
+
+        ## make prediction
+        y_predicted = self.model.predict(X)
+
+        ## compute rmsle
+        rmsle = np.sqrt((y_predicted-y)**2)
+        rmsle['cmdb_id'] = X.loc[:, 'cmdb_id']
+
 
         # draw conclusions
-        self.predictions['abs_error'] = (
-            self.predictions['target_value'] - self.predictions['prediction']).abs()
-        self.predictions['squared_error'] = (
-            self.predictions['target_value'] - self.predictions['prediction']) ** 2
-        self.predictions['relative_error'] = 100 * (
-            self.predictions['target_value'] - self.predictions['prediction']).abs() / self.predictions['target_value']
-
-        THRESHOLD = 50  # 50% of relative error
-        conclusions = self.predictions[self.predictions['relative_error'] > THRESHOLD]
-        return conclusions.rename({'target_node': 'node', 'target_kpi': 'kpi'})
-
+        conclusion = rmsle.groupby('cmdb_id').mean()
+        detected_anomalies_rmse = conclusion[conclusion > 0.9].dropna(
+            axis=0, how='all').dropna(axis=1, how='all')
+        nodes = self.data_utils.node_le.inverse_transform(detected_anomalies_rmse.index)
+        detected_anomalies_rmse.index = self.data_utils.node_le.inverse_transform(detected_anomalies_rmse.index)
         
-            
-                  
+        submission = []
+        for n in nodes:
+            kpi = detected_anomalies_rmse.loc[n, :].dropna().axes[0]
+            for k in kpi:
+                submission.append({'timestamp': self.host_df['timestamp'].max(), 'content': (n, k)})
+
+        submission_df = pd.DataFrame(submission)
+
+        # Finally, return predictions
+        return submission_df        
 
 
 ################################################################################
@@ -241,7 +197,7 @@ def main():
     assert AVAILABLE_TOPICS <= CONSUMER.topics(), 'Please contact admin'
 
     detector = Detector()
-    step_timestamp = 0      # timestamp in milliseconds
+    step_timestamp = int(datetime.datetime.now().timestamp()*1000)      # timestamp in milliseconds
     submitted_anomalies = {
         'timestamp': [],
         'node': [],
@@ -260,7 +216,7 @@ def main():
             msg_count += 1
         else:
             if msg_count > 1:
-                print("{index} {msg} ({count}) {time}".format(index=i-1, msg=last_message, count=msg_count, time=timestamp))
+                print(f"{i-1} {last_message} (+{msg_count}) {timestamp}")
             print(i, message.topic, timestamp)
             trace_msg_count = 0
             last_message = message.topic            
@@ -269,29 +225,38 @@ def main():
         detector.appendData(message)
         
         # run anomaly detection every 5 minutes
-        if ((timestamp - step_timestamp) % 5*60*1000 < 10):     # 10ms tolerance (ie. every 5 minutes modulo +/-10ms)
-            # check anomaly using the data from the last 5min
-            result = detector.detect()           
+        if ((timestamp - step_timestamp) > 5*60*1000):
+            try:
+                # check anomaly using the data from the last 5min
+                result = detector.detect()
 
-            # submit if anomaly
-            if len(result) > 0:
-                for _r in result.iterrows():
-                    # log submit
-                    print("Anomaly detected at the following timestamp {}".format(_r['timestamp']))
-                    print("/!\\ SUBMITTING: {}".format(_r['content']))
-                    submit(_r['content'])
+                print("Detected {} anomalies in the last 5min.".format(len(result)))           
 
-                    # update submitted anomalies and save as csv
-                    submitted_anomalies['timestamp'].append(str(_r['timestamp']))
-                    submitted_anomalies['node'].append(_r['content'][0])
-                    submitted_anomalies['kpi'].append(_r['content'][1])
-                    pd.DataFrame(submitted_anomalies).to_csv('submitted_anomalies')     # save into file to keep trace of submitted anomalies
+                # submit if anomaly
+                if len(result) > 0:
+                    for _r in result.iterrows():
+                        # log submit
+                        print("Anomaly detected at the following timestamp {} with relative error of {:.2f}".format(_r['timestamp'], _r['relative_error']))
+                        print("/!\\ SUBMITTING: {}".format(_r['content']))
+                        submit(_r['content'])
 
-            # flush data
-            print("FLUSHING CACHE")
-            step_timestamp = timestamp     # update step timestamp
-            detector.flushCache()
-        
+                        # update submitted anomalies and save as csv
+                        submitted_anomalies['timestamp'].append(str(_r['timestamp']))
+                        submitted_anomalies['node'].append(_r['content'][0])
+                        submitted_anomalies['kpi'].append(_r['content'][1])
+                        pd.DataFrame(submitted_anomalies).to_csv('submitted_anomalies')     # save into file to keep trace of submitted anomalies
+
+                # flush data
+                print("FLUSHING CACHE")
+                step_timestamp = timestamp     # update step timestamp
+                detector.flushCache()
+            
+            except AssertionError as ae:
+                print(ae)
+            
+            except KeyError as ke:
+                print(f"KeyError: {ke}")
+                print("\t >Ignoring, proceeding...")
 
 
 
