@@ -66,7 +66,8 @@ class DataUtils:
                     'startTime': 'start_time'},
                     inplace=True)
 
-                esb_df['start_time'] = pd.to_datetime(esb_df['start_time'], unit='ms')
+                esb_df['start_time'] = pd.to_datetime(
+                    esb_df['start_time'], unit='ms').tz_convert('Asia/Shanghai - Beijing Time')
                 esb_df['time'] = (esb_df['start_time'] - esb_df['start_time'].min()) / \
                     datetime.timedelta(seconds=1)  # should be 0 to 24h in seconds
                 arr_esb.append(esb_df)
@@ -82,7 +83,7 @@ class DataUtils:
                     # rename columns so that is follows convention some_special_name
                     temp_df.rename(columns={'itemid': 'item_id'}, inplace=True)
 
-                    temp_df['timestamp'] = pd.to_datetime(temp_df['timestamp'], unit='ms')
+                    temp_df['timestamp'] = pd.to_datetime(temp_df['timestamp'], unit='ms').tz_convert('Asia/Shanghai - Beijing Time')
 
                     # changing data type to save memory
                     temp_df['item_id'] = temp_df['item_id'].astype(int)
@@ -116,6 +117,8 @@ class DataUtils:
                             'serviceName': 'service_name',
                             'dsName': 'ds_name'},
                         inplace=True)  # rename columns so that is follows convention some_special_name except for Id
+                    temp_df['start_time'] = pd.to_datetime(
+                        temp_df['start_time'], unit='ms').tz_convert('Asia/Shanghai - Beijing Time')
                     trace_df_lst.append(temp_df)
                     del temp_df
 
@@ -235,12 +238,15 @@ class DataUtils:
         supervised_dataset = self.add_timeseries_features(df, w_period, w_time_unit, w_length)
         supervised_dataset.drop('cmdb_id', axis=1, inplace=True)
 
+        # scale data and transform to multiindex
+        assert supervised_dataset.shape[0] > 0, "Supervised dataset is empty !"
         if scaler:
             scaled_supervised_dataset = pd.DataFrame(scaler.fit_transform(supervised_dataset.values), columns=supervised_dataset.columns)
             multi_supervised_dataset = self.to_multiindex(scaled_supervised_dataset, unique_kpi, w_period, w_time_unit, w_length)
         else :
             multi_supervised_dataset = self.to_multiindex(supervised_dataset, unique_kpi, w_period, w_time_unit, w_length)
 
+        # transform to tensor
         tensor = self.to_tensor(multi_supervised_dataset, w_length)
         return tensor
             
