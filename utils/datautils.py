@@ -67,7 +67,7 @@ class DataUtils:
                     inplace=True)
 
                 esb_df['start_time'] = pd.to_datetime(
-                    esb_df['start_time'], unit='ms').tz_convert('Asia/Shanghai - Beijing Time')
+                    esb_df['start_time'], unit='ms')
                 esb_df['time'] = (esb_df['start_time'] - esb_df['start_time'].min()) / \
                     datetime.timedelta(seconds=1)  # should be 0 to 24h in seconds
                 arr_esb.append(esb_df)
@@ -83,7 +83,7 @@ class DataUtils:
                     # rename columns so that is follows convention some_special_name
                     temp_df.rename(columns={'itemid': 'item_id'}, inplace=True)
 
-                    temp_df['timestamp'] = pd.to_datetime(temp_df['timestamp'], unit='ms').tz_convert('Asia/Shanghai - Beijing Time')
+                    temp_df['timestamp'] = pd.to_datetime(temp_df['timestamp'], unit='ms')
 
                     # changing data type to save memory
                     temp_df['item_id'] = temp_df['item_id'].astype(int)
@@ -117,8 +117,7 @@ class DataUtils:
                             'serviceName': 'service_name',
                             'dsName': 'ds_name'},
                         inplace=True)  # rename columns so that is follows convention some_special_name except for Id
-                    temp_df['start_time'] = pd.to_datetime(
-                        temp_df['start_time'], unit='ms').tz_convert('Asia/Shanghai - Beijing Time')
+                    temp_df['start_time'] = pd.to_datetime(temp_df['start_time'], unit='ms')
                     trace_df_lst.append(temp_df)
                     del temp_df
 
@@ -134,14 +133,13 @@ class DataUtils:
 
             # interpret as datetime objects
             failures_df['start_time'] = pd.to_datetime(
-                failures_df['start_time'], format='%Y/%m/%d %H:%M', infer_datetime_format=True)
+                failures_df['start_time'], format='%Y/%m/%d %H:%M', infer_datetime_format=True).dt.tz_localize('Asia/Shanghai').dt.tz_convert(None)
             failures_df['log_time'] = pd.to_datetime(
-                failures_df['log_time'], format='%Y/%m/%d %H:%M', infer_datetime_format=True)
+                failures_df['log_time'], format='%Y/%m/%d %H:%M', infer_datetime_format=True).dt.tz_localize('Asia/Shanghai').dt.tz_convert(None)
 
             # load failures for the day date
-            FAILURE_date = datetime.datetime.strptime(
-                date, "%Y_%m_%d").date() - datetime.timedelta(days=1)
-            failures_df = failures_df[failures_df['start_time'].dt.date == FAILURE_date]
+            datetime_date = datetime.datetime.strptime(date, "%Y_%m_%d").date()
+            failures_df = failures_df[failures_df['start_time'].dt.date == datetime_date]
             arr_failures.append(failures_df)
         
 
@@ -236,18 +234,21 @@ class DataUtils:
     def transform_to_lstm_data(self, df, unique_kpi, w_period, w_time_unit, w_length, scaler=None):
         # supervised dataset
         supervised_dataset = self.add_timeseries_features(df, w_period, w_time_unit, w_length)
-        supervised_dataset.drop('cmdb_id', axis=1, inplace=True)
+        
+        # get values
+        supervised_dataset = supervised_dataset.loc[:, ~supervised_dataset.columns.isin('hour', 'cmdb_id')].values
 
-        # scale data and transform to multiindex
+        # scale data and transform to tensor
         assert supervised_dataset.shape[0] > 0, "Supervised dataset is empty !"
         if scaler:
-            scaled_supervised_dataset = pd.DataFrame(scaler.fit_transform(supervised_dataset.values), columns=supervised_dataset.columns)
-            multi_supervised_dataset = self.to_multiindex(scaled_supervised_dataset, unique_kpi, w_period, w_time_unit, w_length)
-        else :
-            multi_supervised_dataset = self.to_multiindex(supervised_dataset, unique_kpi, w_period, w_time_unit, w_length)
-
-        # transform to tensor
-        tensor = self.to_tensor(multi_supervised_dataset, w_length)
+            supervised_dataset = scaler.fit_transform(supervised_dataset)
+        
+        # shape = (samples, timesteps, features)
+        n_samples = supervised_dataset.shape[0]
+        n_timesteps = w_length+1
+        n_features = unique_kpi.shape[0]
+        shape = (n_samples, n_timesteps, n_features)
+        tensor = supervised_dataset.reshape(shape)
         return tensor
             
     def create_ts_files(self, df, history_length, step_size, lag_unit, target_step, data_folder, num_rows_per_file):
