@@ -27,6 +27,7 @@ from datautils import DataUtils, DataStats
 class Detector():
     def __init__(self):
         # get models
+        print("Loading models")
         self.models = {}    # dict indexed by _nodes
         nodes = ['db_003', 'db_008', 'db_001', 'db_007', 'db_009', 'db_010',
             'db_002', 'db_004', 'db_013', 'db_011', 'db_006', 'db_005',
@@ -43,6 +44,7 @@ class Detector():
             self.models[node] = tf.keras.models.load_model(f"lstm2/lstm_{node}")
 
         # get scalers
+        print("Loading scalers")
         self.scalers = pickle.load(open("./all_scalers.pkl", 'rb'))
 
         # detector params
@@ -140,17 +142,19 @@ class Detector():
         self.trace_df = pd.DataFrame(columns=['call_type', 'start_time', 'elapsed_time', 'success', 'trace_id', 'id', 'pid', 'cmdb_id', 'service_name', 'ds_name'])        
 
     def detect(self):
+        print("Starting detection...")
         THRESHOLD = 0.5
-        self.host_df['cmdb_id'] = self.node_le.fit_transform(self.host_df['cmdb_id'])
+        data = self.host_df
+        data['cmdb_id'] = self.data_utils.node_le.fit_transform(data['cmdb_id'])
 
         submission = []
-        for node in self.host_df['cmdb_id'].unique():
-            node_name = self.node_le.inverse_transform([node])[0]
+        for node in data['cmdb_id'].unique():
+            node_name = self.data_utils.node_le.inverse_transform([node])[0]
             
             # prepare data
-            train = self.host_df[self.host_df['cmdb_id'] == node]
+            train = data[data['cmdb_id'] == node]
             kpi = train['name'].unique()
-            tensor = data_utils.transform_to_lstm_data(train, kpi, self.WIN_PERIOD, self.TIME_UNIT, self.WIN_LENGTH, self.scalers[node_name])
+            tensor = self.data_utils.transform_to_lstm_data(train, kpi, self.WIN_PERIOD, self.TIME_UNIT, self.WIN_LENGTH, self.scalers[node_name])
             X = tensor[:, 1:, :]
             y = tensor[:, 0, :]
             assert X.shape[0] > 0, "X is empty!"
@@ -164,7 +168,7 @@ class Detector():
 
             anomalous_kpis = np.where(msle > THRESHOLD)
             for k in kpi[anomalous_kpis]:
-                submission.append({'timestamp': self.host_df['timestamp'].max(), 'content': [node_name, k]})  
+                submission.append({'timestamp': data['timestamp'].max(), 'content': [node_name, k]})  
         return pd.DataFrame(submission)
 
 
@@ -238,12 +242,12 @@ def main():
         detector.appendData(message)
         
         # run anomaly detection every 5 minutes
-        if ((timestamp - step_timestamp) > 5*60*1000):
+        if ((timestamp - step_timestamp) > 6*60*1000):
             try:
                 # check anomaly using the data from the last 5min
                 result = detector.detect()
 
-                print("Detected {} anomalies in the last 5min.".format(len(result)))           
+                print("Detected {} anomalies in the last 6min.".format(len(result)))           
 
                 # submit if anomaly
                 if len(result) > 0:
