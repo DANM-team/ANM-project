@@ -1,6 +1,10 @@
 .vscode/
 training_data/    
 temp/
+*.zip
+*.pkl
+
+solution/sol3/lstm/
 
 # ssh keys
 /tencent cloud vm/ 
