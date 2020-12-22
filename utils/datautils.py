@@ -236,7 +236,7 @@ class DataUtils:
         supervised_dataset = self.add_timeseries_features(df, w_period, w_time_unit, w_length)
         
         # get values
-        supervised_dataset = supervised_dataset.loc[:, ~supervised_dataset.columns.isin('hour', 'cmdb_id')].values
+        supervised_dataset = supervised_dataset.loc[:, ~supervised_dataset.columns.isin(['hour', 'cmdb_id'])].values
 
         # scale data and transform to tensor
         assert supervised_dataset.shape[0] > 0, "Supervised dataset is empty !"
