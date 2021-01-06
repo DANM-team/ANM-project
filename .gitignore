@@ -1,1 +1,22 @@
 .vscode/
+training_data/    
+temp/
+*.zip
+*.pkl
+
+solution/sol3/lstm/
+
+# ssh keys
+/tencent cloud vm/ 
+
+*.pkl
+*.zip
+
+# report temp files
+report/report.aux
+report/report.fdb_latexmk
+report/report.log
+report/report.out
+
+data/
+kafka/

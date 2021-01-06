@@ -5,7 +5,7 @@ import requests
 import json
 
 from kafka import KafkaConsumer
-
+# b;*dw|+M6Kv3
 
 # Three topics are available: platform-index, business-index, trace.
 # Subscribe at least one of them.
