@@ -110,7 +110,20 @@
   \city{Haidian Qu}
   \state{Beijing Shi}
   \country{China}}
-
+  
+\author{Fabien Ravet}
+% \authornote{Both authors contributed equally to this research.}
+\email{@mails.tsinghua.edu.cn}
+% \orcid{1234-5678-9012}
+% \author{G.K.M. Tobin}
+% \authornotemark[1]
+% \email{webmaster@marysville-ohio.com}
+\affiliation{%
+  \institution{Tsinghua University}
+  \streetaddress{30 Shuangqing Rd}
+  \city{Haidian Qu}
+  \state{Beijing Shi}
+  \country{China}}
 % \author{Lars Th{\o}rv{\"a}ld}
 % \affiliation{%
 %   \institution{The Th{\o}rv{\"a}ld Group}
@@ -179,7 +192,7 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
-  TODO: abstract, conclusion, related work and insert some figures + furnish round 2 solution part
+    Microservices-operated web services are extremely difficult to monitor and troubleshoot manually, that is why AIOps research are gaining importance recently. This work studies different methods to anomaly detection and root cause analysis in a web service environment. With the help of various performance indicators, we created two models capable of efficiently detecting outliers: the first one uses time series forecasting through a LSTM neural network with a moving average anomaly detection. The second model is hard coded with a set of rules to discover anomalous patterns in the live data. This report demonstrates the main steps of our work on the 2020 ANM project with explicit insights on the utilized methods, clear visual figures and in-depth discussion of the major issues encountered during the process. 
 \end{abstract}
 
 %%
@@ -234,9 +247,9 @@ As appealing as this method can appear at first glance, it comes with some incov
 In order to prevent the system from failing, companies were originally hiring system engineers to monitor and repair the system, but with the exponential growth of web services and their various microservices, it has become impossible to monitor all of them at once. 
 That's where AIOps comes in to save the day, using artificial intelligence recent progress to make this monitoring task less tedious, more precise and eventually faster.
 \\
-% Many researches have been conducted to design optimal solutions to this kind of problem, reviews of the best methods are numerous as well. 
-% \cite{nedelkoski_anomaly_2019}
-
+Many research have been conducted to design optimal solutions to this kind of problem. Reviews of the best methods are numerous as well:  various approaches have been considered throughout history, including autoencoders, to tackle the absence of clean training data issue \cite{zhou_anomaly_2017} and other unsupervised learning techniques through LSTM networks like in \cite{nedelkoski_anomaly_2019}.
+Clustering-based algorithms and other nearest neighbors algorithms are also considered to be very robust for anomaly detection \cite{chandola_anomaly_2009}, and have even been furthered explored to develop specialized methods such as BIRCH in \cite{gulenko_detecting_2018}. 
+Troubleshooting an aggregate of microservices working together is a non-trivial task that can be performed through an comprehensive analysis of the trace call graph, like in \cite{manzoor_fast_2016}, that need to be extended with root cause investigation such as \cite{weng_root_2018} or \cite{yan_g-rca_2012}. 
 
 \section{General Architecture}
 First let's examine the architecture of the web service. 
@@ -263,10 +276,15 @@ An organizational problem within the team was a major factor in this miscalculat
 The first step of this solution is to discover anomalies using ESB data, which can be achieved through multiple methods including an exponential moving average (EMA), and an unsupervised method specially developped for time series anomaly detection, HBOS (histogram based outlier detection \cite{goldstein_histogram-based_2012}). 
 Both methods are extremely easy to implement, the former being the easiest because it does not require any model to be trained, only statistical consideration are required.
 We decided this solution should preferably use the \verb|avg_time| feature of the ESB data, rather than the \verb|success_rate|, because unsuccessful business index are extremely rare and it does not help finding anomalies that much. 
-Even though the HBOS approach showed promising results in the first place, we finally opted for the EMA method. 
-EMA can be implemented effortlessly while being free from any dependencies (as opposed to HBOS which is not implemented in the standard python libraries).
+Even though the HBOS approach showed promising results in the first place (see \autoref{fig:hbos}), we finally opted for the EMA method. 
+EMA can be implemented effortlessly, showed excellent results (see \autoref{sec:appendix_ema}) while being free from any dependencies (as opposed to HBOS which is not implemented in the standard python libraries).
 
-% insert figures of anomaly detection with HBOS and EMA
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/hbos.png}
+  \caption{HBOS (histogram based outlier detection) showed promising initial results, being able to successfully discover major ESB data anomalies.}
+  \label{fig:hbos}
+\end{figure}
 
 \subsection{Candidate Anomalous Host}
 Once our program correctly detected an anomaly, we needed to draw out candidate anomalous hosts for further testing and analysis. 
@@ -284,7 +302,7 @@ We tried various error functions, including: mean absolute error (MAE), mean rel
 \\
 \\
 The proper functioning of this step essentially resides in the choice of the model that will make such prediction. 
-Since the problem deals with Time Series, there are many models indicated for this type of use including statistical methods (such as ARIMA and its multiple variants),  decision trees (such as XGBoost) or deep learning (such as LSTM based neural networks). 
+Since the problem deals with Time Series, there are many models indicated for this type of use including statistical methods (such as ARIMA and its multiple variants \cite{moayedi_arima_2008}),  decision trees (such as XGBoost and LigthGBM) or deep learning (such as LSTM based neural networks and other deep learning techniques \cite{kim_web_2018}). 
 Additionally, the methods detailed below require some data transformation and feature engineering. 
 Incoming data from the server is modified into a "supervised dataset" where the input has columns for each KPI time series, further divided into past values (at times t-1min, t-2min, ...) and output has one columns for each KPI time series with only the current value (t). 
 In order to tackle the missing values issue, we decided to go for forward-fill imputing because every KPI has different update frequency and we considered missing values as an absence of update, i.e. the value has not changed up until now.
@@ -322,6 +340,9 @@ Though we tried the multiple xgboost models approach as well as the multiouput s
 \autoref{fig:xgboost} in \autoref{sec:appendix_xgboost} shows a sample of predicted kpis using the multioutput xgboost model where some predictions are not that accurate.
 
 \section{Round 2 Solution}
+We worked on our own to design rule-based algorithms mainly analysing trace data to find the anomalous nodes and the KPI affected. Due to a lack of communication from Fabien, we came up with two slightly different approaches.
+
+\subsection{Aurelien's implementation}
 This time around anomalies are detected using trace and host KPIs data only because the business index data has a low frequency update that can make the program skip anomalies. 
 Inspired by the best solutions method, we switched back to a rule-based model.
 A set of rules analyzes the trace data using different engineered features including: the \verb|elapsed_time| (that is natively inside the trace data), the \verb|call_time| of hosts (i.e. the time spent in edges of the trace call graph), the position of hosts in the call graph (child, parent, cousin) and their own features. 
@@ -353,23 +374,82 @@ This allows manual analysis using the labeled data to discover anomalous pattern
   \label{fig:call_graph}
 \end{figure}
 
+\subsection{Fabien's implementation}
+This solution is aimed to be working on the training and testing data provided, and has not yet been implemented on the Tencent VM.
+\\
+\subsubsection*{Microservice Architecture}
+As microservice-based softwares grow in popularity, such architecture generates new problems, and thus new approaches are needed to manage them. A microservice is a small scalable software service which is part of a larger application. The intermittent communication between the services makes it difficult to identify the root cause of a problem, so it is important to first study the specific architecture of the application and visualize the connections between microservices, before addressing log anomaly detection and location.
+\\
+After running some tests on the trace data, we can understand the relations between the different types of calls (see \autoref{fig:Call_chain_type} and \autoref{fig:Call_chain_host}). For example, a span with a Remote Process call type can only have span children with Fly Remote, CSF or Local call types. Furthermore, without much surprise, only the Remote Process spans have a parent span on a different host.
+More importantly, we can analyze the calls between nodes to assert their relations, which will be important to address network anomalies for example.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.3\textwidth]{images/Call_chain_type.png}
+  \caption{The hierarchical relations between call types.}
+  \label{fig:Call_chain_type}
+\end{figure}
+
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/Call_chain_host.png}
+  \caption{The hierarchical relations between nodes.}
+  \label{fig:Call_chain_host}
+\end{figure}
+
+\subsubsection*{Anomaly detection with ESB}
+We kept using ESB business rate indicators to tackle the anomaly detection problem. Although the number of submitted requests and the success rate are not reliable enough to find all anomalies, the average time spent processing a request always matches the upcoming of an anomaly. Moreover, it doesn't induce much latency compared to the evolution of trace global processing time.
+
+
+
+
+Exponential moving average is a great tool that detects the appearance of an anomaly down to the minute (see \autoref{fig:EMA}). It takes some time to stabilize after an anomaly, thus resulting in an increase of the expected duration of the anomaly. However, this is not a problem since the anomalies duration is 5 minutes long and the continuation of the algorithm only requires 2 minutes of anomalous traces.
 
 \newpage
+\subsubsection*{Data preprocessing}
+A host can be considered anomalous if the running time of its spans is very low or high. In order to obtain the true running time of a microservice on its host, we first need to retrieve the children spans elapsed time from its own elapsed time. For that purpose, we group trace data according to trace id and sort spans according to their start time to easily find their parent.
+\\
+\subsubsection*{Defining abnormal call times}
+We can build a matrix matching the hosts (columns) with the instances they call (rows), and fill it with the percentile of the running times of the corresponding spans. Setting a threshold for each type of call, we are able not only to detect the anomalous hosts, but also the very nature of the calling problem. This matrix is conceived on non anomalous trace data in order to set coherent thresholds, we built several of them with different percentiles and compared them later with the anomalous traces.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/Percentile_matrix.png}
+  \caption{The 99.9th percentile matrix.}
+  \label{fig:Percentile_matrix}
+\end{figure}
+
+\subsubsection*{Anomaly location}
+For each anomaly detected, we select two minutes of anomalous trace data already preprocessed. We initialize another matrix matching the hosts and call types and use it to count the anomalous spans. A span is considered anomalous as soon as its calling time exceeds the percentile thresholds defined on the non anomalous training trace data.
+\\
+As there are very few different types of anomalous KPIs we can try to deduce from the matrix of abnormal spans both the host and type of affected KPI according to different distribution scenarios.
+\\
+The easiest type of failing KPI to detect is \verb|container_cpu_used| which triggers anomalous local calls in docker hosts.
+On the other hand, the network problems affecting docker hosts is detected if a docker instance has huge remote process running time.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/Anomaly_location.png}
+  \caption{The docker 3 calls on itself are anomalous: container CPU used error.}
+  \label{fig:Anomaly_location}
+\end{figure}
+
 \section{Work allocation}
 \begin{table}[h!]
-  \centering
-  \begin{tabular}{|l|l|l|l|}
-  \hline
-               & \multicolumn{1}{c|}{Aurelien VU NGOC} & \multicolumn{1}{c|}{Fabien RAVET} & \multicolumn{1}{c|}{Aleksander} \\ \hline
-  round 1      & HBOS, xgboost, LSTM                              & EMA for esb anomaly detection     &                                 \\ \hline
-  round 2 \& 3 & Rule-based solution                              &                                   &                                 \\ \hline
-  other        & This report, Tencent VM code design              &                                   &                                 \\ \hline
-  \end{tabular}
-  \caption{Project work allocation}
-  \label{tab:work_allocation}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+ & Aurelien VU NGOC & Fabien RAVET \\ \hline
+round 1 & HBOS, xgboost, LSTM & EMA for esb anomaly detection \\ \hline
+round 2 \& 3 & \begin{tabular}[c]{@{}c@{}}Rule-based model\\ (implemented in Tencent VM)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Another rule-base model \\ (not yet implemented in Tencent VM)\end{tabular} \\ \hline
+other & \begin{tabular}[c]{@{}c@{}}This report\\ Presentation\\ Tencent VM code design\end{tabular} & Presentation \\ \hline
+\end{tabular}
+\caption{Project work allocation}
+\label{tab:work_allocation}
 \end{table}
 
-An insight of the work allocation can also be found in the GitHub commit history at the following url: \url{https://github.com/DANM-team/ANM-project}.
+An overview of the work allocation can also be found in the GitHub commit history at the following url: \url{https://github.com/DANM-team/ANM-project}.
 
 \section{Conclusion}
 This study aims to implement a troubleshooting algorithm for a microservices-operated web service. 
@@ -399,7 +479,24 @@ Finally we believe the ANM project has been a real occasion to put all the knowl
 
 %%
 %% If your work has an appendix, this is the place to put it.
+\newpage
 \appendix
+\section{EMA results}\label{sec:appendix_ema}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/EMA.png}
+  \caption{The exponential moving average present dissimilarities on the anomaly.}
+  \label{fig:EMA}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics{images/Anomaly_timestamps.png}
+  \caption{EMA promising results: the timestamps of occurring anomalies exactly correspond to given anomalies in the training data.}
+  \label{fig:anomaly_timestamps}
+\end{figure}
+
+
 \section{XGBoost results}\label{sec:appendix_xgboost}
 \begin{figure}[h!]
   \centering
