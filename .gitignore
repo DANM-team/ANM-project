@@ -11,3 +11,9 @@ solution/sol3/lstm/
 
 *.pkl
 *.zip
+
+# report temp files
+report/report.aux
+report/report.fdb_latexmk
+report/report.log
+report/report.out
