@@ -1,0 +1,67 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{2}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[\protect\citeauthoryear{Chen and Guestrin}{Chen and Guestrin}{2016}]%
+        {chen_xgboost_2016}
+\bibfield{author}{\bibinfo{person}{Tianqi Chen} {and} \bibinfo{person}{Carlos
+  Guestrin}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{{XGBoost}: {A} {Scalable} {Tree} {Boosting}
+  {System}}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the 22nd ACM SIGKDD
+  International Conference on Knowledge Discovery and Data Mining}}
+  (\bibinfo{date}{Aug.} \bibinfo{year}{2016}), \bibinfo{pages}{785--794}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2939672.2939785}
+\showDOI{\tempurl}
+\newblock
+\shownote{arXiv: 1603.02754.}
+
+
+\bibitem[\protect\citeauthoryear{Goldstein and Dengel}{Goldstein and
+  Dengel}{2012}]%
+        {goldstein_histogram-based_2012}
+\bibfield{author}{\bibinfo{person}{Markus Goldstein} {and}
+  \bibinfo{person}{Andreas Dengel}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Histogram-based {Outlier} {Score} ({HBOS}):
+  {A} fast {Unsupervised} {Anomaly} {Detection} {Algorithm}}}.
+\newblock
+
+
+\end{thebibliography}
