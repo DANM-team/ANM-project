@@ -25,6 +25,10 @@ class Detector():
             columns=['item_id', 'name', 'bomc_id', 'timestamp', 'value', 'cmdb_id'])
         self.trace_df = pd.DataFrame(columns=['call_type', 'start_time', 'elapsed_time',
                                               'success', 'trace_id', 'id', 'pid', 'cmdb_id', 'service_name', 'ds_name'])
+        
+        # thresholds
+        print("Loading all time statistics")
+        self.all_time_statistics = pd.read_csv("alltime_statistics.csv", index_col="node_name")
 
     def appendData(self, message):
         data = json.loads(message.value.decode('utf8'))
@@ -41,13 +45,9 @@ class Detector():
                         'cmdb_id': item['cmdb_id']
                     })
             temp_df = pd.DataFrame(temp)
-            self.host_df = pd.concat([self.host_df, temp_df])
-
-            # convert timestamps to datetime object
-            self.host_df['timestamp'] = pd.to_datetime(
-                self.host_df['timestamp'], unit='ms', errors='ignore')
-            #   errors :If ‘ignore’, then invalid parsing will return the input.
-            #   because it tries to convert a datetime into a datetime
+            temp_df['timestamp'] = pd.to_datetime(temp_df['timestamp'], unit='ms')
+            # self.host_df = pd.concat([self.host_df, temp_df])
+            self.host_df = self.host_df.append(temp_df, ignore_index=True)
 
         elif message.topic == 'business-index':
             temp = []
@@ -55,20 +55,16 @@ class Detector():
                 for item in data['body'][key]:
                     temp.append({
                         'service_name': item['serviceName'],
-                        'startTime': item['startTime'],
+                        'start_time': item['startTime'],
                         'avg_time': item['avg_time'],
                         'num': item['num'],
                         'succee_num': item['succee_num'],
                         'succee_rate': item['succee_rate']
                     })
             temp_df = pd.DataFrame(temp)
-            self.esb_df = pd.concat([self.esb_df, temp_df])
-
-            # convert timestamps to datetime object
-            self.esb_df['start_time'] = pd.to_datetime(
-                self.esb_df['startTime'], unit='ms', errors='ignore')
-            #   errors :If ‘ignore’, then invalid parsing will return the input.
-            #   because it tries to convert a datetime into a datetime
+            temp_df['start_time'] = pd.to_datetime(temp_df['start_time'], unit='ms')
+            # self.esb_df = pd.concat([self.esb_df, temp_df])
+            self.esb_df = self.esb_df.append(temp_df, ignore_index=True)
 
             # 'time' is like an index from the begining of timestamps (hbos doesn't handle datetime objects, so we use floats)
             self.esb_df['time'] = (self.esb_df['start_time'] - self.esb_df['start_time'].min(
@@ -90,13 +86,9 @@ class Detector():
                 temp_df['service_name'] = data['serviceName']
             if 'dsName' in data:
                 temp_df['ds_name'] = data['dsName']
-            self.trace_df = pd.concat([self.trace_df, temp_df])
-
-            # convert timestamps to datetime object
-            self.trace_df['start_time'] = pd.to_datetime(
-                self.trace_df['start_time'], unit='ms', errors='ignore')
-            #   errors :If ‘ignore’, then invalid parsing will return the input.
-            #   because it tries to convert a datetime into a datetime
+            temp_df['start_time'] = pd.to_datetime(temp_df['start_time'], unit='ms')
+            # self.trace_df = pd.concat([self.trace_df, temp_df])
+            self.trace_df = self.trace_df.append(temp_df, ignore_index=True)
 
         del temp_df
 
@@ -108,6 +100,23 @@ class Detector():
             columns=['item_id', 'name', 'bomc_id', 'timestamp', 'value', 'cmdb_id'])
         self.trace_df = pd.DataFrame(columns=['call_type', 'start_time', 'elapsed_time',
                                               'success', 'trace_id', 'id', 'pid', 'cmdb_id', 'service_name', 'ds_name'])
+    
+    def deleteOldCacheData(self):
+        # == only keep 20min of records all the time (except when starting of course) ==
+        cache_saving_time_window = datetime.timedelta(minutes=20)
+        
+        # esb
+        esb_condition = self.esb_df['start_time'] >= (self.esb_df['start_time'].max() - cache_saving_time_window)
+        self.esb_df = self.esb_df[esb_condition]
+
+        # host
+        host_condition = self.host_df['timestamp'] >= (self.host_df['timestamp'].max() - cache_saving_time_window)
+        self.host_df = self.host_df[host_condition]
+
+        # trace
+        trace_condition = self.trace_df['start_time'] >= (self.trace_df['start_time'].max() - cache_saving_time_window)
+        self.trace_df = self.trace_df[trace_condition]
+
 
     def detectESB(self):
         # check if esb_df is not empty
@@ -213,9 +222,9 @@ class Detector():
             if abs_correlations_sorted.empty:
                 kpi = None
             else:
-                abs_correlations_sorted.sort_values(
+                abs_correlations_sorted = abs_correlations_sorted.reset_index().sort_values(
                     'value', ascending=False)   # sort by correlation value
-                kpi = abs_correlations_sorted.iloc[0].reset_index()['name']
+                kpi = abs_correlations_sorted.iloc[0]['name']
 
             # append result to res
             res.append([_node, kpi])
@@ -224,6 +233,136 @@ class Detector():
             print("I found that the kpi most susceptible of being the cause of the anomaly of node {} is {}".format(
                 res[-1][0],
                 res[-1][1]))
+        return res
+    
+    def checkDB_On_Off_State(self):
+        print("Checking db On_Off_State kpi ...")
+        res = []
+        if self.host_df.shape[0] > 0:
+            # print(f"most recent timestamp of host {self.host_df['timestamp'].max()} ({self.host_df['timestamp'].max().timestamp()})")
+            # print(f"step timestamp {datetime.datetime.fromtimestamp(step_timestamp/1e3)} ({step_timestamp})")
+            # tmsp = datetime.datetime.fromtimestamp(step_timestamp/1e3) - datetime.timedelta(hours=8) # because of gmt+8
+            tmsp = self.host_df['timestamp'].max() - datetime.timedelta(minutes=1)
+            host = self.host_df[self.host_df['timestamp'] >= tmsp]
+
+            # test on db hosts to check for "db close" error
+            anomalous_on_off_state_idx = np.where(host.loc[host['name'] == 'On_Off_State', 'value'] < 1)
+            anomalous_db = host.iloc[anomalous_on_off_state_idx]['cmdb_id'].unique()
+            for db in anomalous_db:
+                res.append([db, "On_Off_State"])
+                res.append([db, "tnsping_result_time"])
+        print(f"\t... found {len(res)} anomalies")
+        return res
+    
+    def check_Sent_queue_Received_queue(self):
+        print("Checking os Sent_queue & Received_queue kpi ...")
+        res = []
+        if self.host_df.shape[0] > 0:
+            tmsp = self.host_df['timestamp'].max() - datetime.timedelta(minutes=1)
+            host = self.host_df[self.host_df['timestamp'] >= tmsp]
+
+            threshold = 100
+            anomalous_os_received_idx = np.where(host.loc[host['name'] == 'Received_queue', 'value'] > threshold)[0]
+            anomalous_os_sent_idx = np.where(host.loc[host['name'] == 'Sent_queue', 'value'] > threshold)[0]
+            if len(anomalous_os_received_idx) > 1:
+                for node in host.loc[host['name'] == 'Received_queue', 'cmdb_id'].iloc[anomalous_os_received_idx]:
+                    res.append([node, "Received_queue"])
+            if len(anomalous_os_sent_idx) > 1:
+                for node in host.loc[host['name'] == 'Sent_queue', 'cmdb_id'].iloc[anomalous_os_sent_idx]:
+                    res.append([node, "Sent_queue"])
+        print(f"\t... found {len(res)} anomalies")
+        return res
+    
+    def checkHosts(self):
+        print("Checking nodes elapsed_time ...")
+        res = []
+        if self.trace_df.shape[0] > 0:
+            # tmsp = datetime.datetime.fromtimestamp(step_timestamp/1e3) - datetime.timedelta(hours=8) # because of gmt+8
+            tmsp = self.trace_df['start_time'].max() - datetime.timedelta(minutes=1)
+            # print(f"most recent timestamp of trace_df {self.trace_df['start_time'].max()} ({self.trace_df['start_time'].max().timestamp()})")
+            # print(f"tmsp = {tmsp}")
+            # print(f"step timestamp {datetime.datetime.fromtimestamp(step_timestamp/1e3)} ({step_timestamp})")
+
+            long_time_traces = self.trace_df.copy()
+            traces = self.trace_df[self.trace_df['start_time'] >= tmsp]
+            # print(f"host check with traces of shape {traces.shape} (trace_df is of shape {self.trace_df.shape})")
+            if 'node_name' not in traces.columns:
+                traces.loc[:, 'node_name'] = traces['cmdb_id'] # CSF, FlyRemote, OSB, RemoteProcess
+                # traces.loc[traces['call_type'].isin(['LOCAL', 'JDBC']), 'node_name'] = traces.loc[traces['call_type'].isin(['LOCAL', 'JDBC']), 'ds_name']
+                condition = traces['ds_name'].fillna('').str.contains('db')
+                traces.loc[condition, 'node_name'] = traces.loc[condition, 'ds_name']
+
+            if 'node_name' not in long_time_traces.columns:
+                long_time_traces.loc[:, 'node_name'] = long_time_traces['cmdb_id'] # CSF, FlyRemote, OSB, RemoteProcess
+                # long_time_traces.loc[long_time_traces['call_type'].isin(['LOCAL', 'JDBC']), 'node_name'] = long_time_traces.loc[long_time_traces['call_type'].isin(['LOCAL', 'JDBC']), 'ds_name']
+                condition = long_time_traces['ds_name'].fillna('').str.contains('db')
+                long_time_traces.loc[condition, 'node_name'] = long_time_traces.loc[condition, 'ds_name']
+
+            long_time_traces = long_time_traces[['node_name', 'elapsed_time']]
+            traces = traces[['node_name', 'elapsed_time']]
+
+            for node in list(traces['node_name'].dropna().unique()):
+                threshold = self.all_time_statistics.loc[node, 'quantile99_99'] if node in self.all_time_statistics.index else np.inf
+                print(f"Examining {node} with threshold {threshold}")
+                ts = traces.loc[traces['node_name'] == node]
+                long_time_ts = long_time_traces.loc[long_time_traces['node_name'] == node]
+                # zscore = (ts - long_time_ts.mean()) / long_time_ts.std()
+
+                if 'os' in node:
+                    # threshold = 2
+                    # anomalous_idx = np.where(zscore > threshold)[0]
+                    anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                    if len(anomalous_idx) > 3:
+                        res.append([node, "Sent_queue"])
+                        res.append([node, "Received_queue"])
+                
+                elif 'docker' in node:
+                    if node in ['docker_004']:
+                        # threshold = 5
+                        # anomalous_idx = np.where(zscore > threshold)[0]
+                        anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                        if len(anomalous_idx) > 3:
+                            res.append([node, "container_cpu_used"])
+
+                    elif node in ['docker_005']:
+                        # threshold = 6
+                        # anomalous_idx = np.where(zscore > threshold)[0]
+                        anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                        if len(anomalous_idx) > 3:
+                            res.append([node, None])
+                        
+                    elif node in ['docker_007']:
+                        # threshold = 5
+                        # anomalous_idx = np.where(zscore > threshold)[0]
+                        anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                        if len(anomalous_idx) > 3:
+                            res.append([node, None])
+
+                    elif node in ['docker_006']:
+                        # threshold = 3
+                        # anomalous_idx = np.where(zscore > threshold)[0]
+                        anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                        if len(anomalous_idx) > 3:
+                            res.append([node, "container_cpu_used"])
+                    
+                    else:
+                        # threshold = 3
+                        # anomalous_idx = np.where(zscore > threshold)[0]
+                        anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                        if len(anomalous_idx) > 3:
+                            res.append([node, np.random.choice([None, "container_cpu_used"])])
+                
+                elif 'db' in node:
+                    # threshold = 6
+                    # anomalous_idx = np.where(zscore > threshold)[0]
+                    anomalous_idx = np.where(ts['elapsed_time'] > threshold)[0]
+                    if len(anomalous_idx) > 3:
+                        # kpi = np.random.choice([["Proc_User_Used_Pct", "Proc_Used_Pct", "Sess_Connect"], ["On_Off_State", "tnsping_result_time"]])
+                        kpi = ["Proc_User_Used_Pct", "Proc_Used_Pct", "Sess_Connect"]
+                        for k in kpi:
+                            res.append([node, k])
+
+        print(f"\t... found {len(res)} anomalies")
         return res
 
 
@@ -284,43 +423,58 @@ def main():
             msg_count += 1
         else:
             if msg_count > 1:
-                print("{index} {msg} ({count}) {time}".format(
-                    index=i-1, msg=last_message, count=msg_count, time=timestamp))
+                print(f"{i-1} {last_message} (+{msg_count}) {timestamp}")
             print(i, message.topic, timestamp)
-            trace_msg_count = 0
-            last_message = message.topic
+            msg_count = 0
+            last_message = message.topic  
 
-        # flush every 30min
-        if (timestamp - flush_timestamp >= 30*60*1000):
-            print("FLUSHING CACHE")
-            flush_timestamp = timestamp     # update step timestamp
-            detector.flushCache()
+        # # flush every 30min
+        # if (timestamp - flush_timestamp >= 30*60*1000):
+        #     print("FLUSHING CACHE")
+        #     flush_timestamp = timestamp     # update step timestamp
+        #     detector.flushCache()
 
         # append data to
         detector.appendData(message)
 
         # run anomaly detection every minute
         if ((timestamp - step_timestamp) > 1*60*1000):
-            print(f"== Running Anomaly Detection ({timestamp}) ==")
-            # check anomaly
-            tmsp = detector.detectESB()
+            print(f"== Running Anomaly Detection ({timestamp}/{step_timestamp}) ==")
+            res = []
 
-            # if anomaly, find root Cause
-            if tmsp != None and len(tmsp) > 0:
-                for _t in tmsp:
-                    if str(_t) not in submitted_anomalies.keys():
-                        # log results
-                        res = detector.findRootCause(_t)
-                        if len(res) > 0:
-                            # log submit
-                            print(
-                                "Anomaly detected at the following timestamp {}".format(_t))
-                            print("/!\\ SUBMITTING: {}".format(res))
-                            submit(res)
-                            submitted_anomalies[str(_t)] = res
-                            # save into file to keep trace of submitted anomalies
-                            pd.DataFrame(submitted_anomalies).to_csv(
-                                'submitted_anomalies')
+            # check esb data for anomalies
+            # tmsp = detector.detectESB()
+            # if tmsp != None and len(tmsp) > 0:
+            #     for _t in tmsp:
+            #         res += detector.findRootCause(_t)
+                        
+
+            # check db status
+            res += detector.checkDB_On_Off_State()
+
+            # check sent queue & received queue
+            res += detector.check_Sent_queue_Received_queue()
+            
+            # check hosts
+            res += detector.checkHosts()
+
+            # finally, submit found anomalies
+            if len(res) > 0:
+                # log submit
+                print("Anomaly detected at the following timestamp {}".format(step_timestamp))
+                print("/!\\ SUBMITTING: {}".format(res))
+                for _res in res:
+                    if str(step_timestamp) in submitted_anomalies.keys() and submitted_anomalies[str(step_timestamp)] != _res: # check if this anomaly has not been submitted already
+                        submit([_res])
+                        submitted_anomalies[str(step_timestamp)] = _res
+                    # save into file to keep trace of submitted anomalies
+                pd.DataFrame(submitted_anomalies).to_csv('submitted_anomalies.csv')
+            
+            
+            
+            print("FREEING CACHE FROM OLD DATA")
+            detector.deleteOldCacheData()
+
             # update step_timestamp
             step_timestamp = timestamp
 

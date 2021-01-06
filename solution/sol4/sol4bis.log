@@ -1,0 +1,400 @@
+Last failed login: Tue Jan  5 16:43:06 CST 2021 from 69.47.161.24 on ssh:notty
+There were 15 failed login attempts since the last successful login.
+Last login: Tue Jan  5 16:36:26 2021 from 77.130.131.243
+[root@anmvm11 ~]# cat /solution/sol4bis2.log
+nohup: ignoring input
+1 platform-index 1609835024000
+17 platform-index (16) 1609834980000
+18 business-index 1609834980000
+18 business-index (16) 1609835040080
+19 trace 1609835040080
+40 trace (37) 1609835041000
+41 platform-index 1609835041000
+41 platform-index (37) 1609835040147
+42 trace 1609835040147
+766 trace (761) 1609835042000
+767 platform-index 1609835042000
+767 platform-index (761) 1609835040837
+768 trace 1609835040837
+2173 trace (2166) 1609835043000
+2174 platform-index 1609835043000
+2175 platform-index (2167) 1609835043827
+2176 trace 1609835043827
+5985 trace (5976) 1609835045000
+5986 platform-index 1609835045000
+5990 platform-index (5980) 1609835048869
+5991 trace 1609835048869
+9760 trace (9749) 1609835050000
+9761 platform-index 1609835050000
+9778 platform-index (9766) 1609835052132
+9779 trace 1609835052132
+13571 trace (13558) 1609835068000
+13572 platform-index 1609835068000
+== Running Anomaly Detection (1609835084000/1609835023989) ==
+db check with host of shape (1713, 6)
+most recent timestamp of trace_df 2021-01-05 08:24:15.429000 (1609835055.429)
+tmsp = 2021-01-05 07:54:15.429000
+host check with traces of shape (13526, 10) (trace_df is of shape (13526, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835023989
+/!\ SUBMITTING: [['docker_003', None], ['docker_002', 'container_cpu_used'], ['docker_001', None], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['db_009', 'Proc_User_Used_Pct'], ['db_009', 'Proc_Used_Pct'], ['db_009', 'Sess_Connect'], ['db_007', 'On_Off_State'], ['db_007', 'tnsping_result_time']]
+13593 platform-index (13579) 1609835040000
+13594 business-index 1609835040000
+13594 business-index (13579) 1609835055461
+13595 trace 1609835055461
+17387 trace (17371) 1609835090000
+17388 platform-index 1609835090000
+17416 platform-index (17399) 1609835060556
+17417 trace 1609835060556
+21213 trace (21195) 1609835119000
+21214 platform-index 1609835119000
+== Running Anomaly Detection (1609835145000/1609835084000) ==
+db check with host of shape (3489, 6)
+most recent timestamp of trace_df 2021-01-05 08:24:28.155000 (1609835068.155)
+tmsp = 2021-01-05 07:54:28.155000
+host check with traces of shape (21116, 10) (trace_df is of shape (21116, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835084000
+/!\ SUBMITTING: [['docker_003', 'container_cpu_used'], ['docker_007', None], ['docker_002', None], ['docker_001', None], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+21252 platform-index (21233) 1609835067633
+21253 trace 1609835067633
+25042 trace (25022) 1609835100000
+25043 business-index 1609835100000
+25043 business-index (25022) 1609835158000
+25044 platform-index 1609835158000
+== Running Anomaly Detection (1609835206000/1609835145000) ==
+db check with host of shape (5228, 6)
+most recent timestamp of trace_df 2021-01-05 08:24:34.191000 (1609835074.191)
+tmsp = 2021-01-05 07:54:34.191000
+host check with traces of shape (24906, 10) (trace_df is of shape (24906, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835145000
+/!\ SUBMITTING: [['docker_003', 'container_cpu_used'], ['docker_007', None], ['docker_002', 'container_cpu_used'], ['docker_001', None], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'On_Off_State'], ['db_007', 'tnsping_result_time']]
+== Running Anomaly Detection (1609835267000/1609835206000) ==
+db check with host of shape (7078, 6)
+most recent timestamp of trace_df 2021-01-05 08:24:34.191000 (1609835074.191)
+tmsp = 2021-01-05 07:54:34.191000
+host check with traces of shape (24906, 10) (trace_df is of shape (24906, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835206000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', 'container_cpu_used'], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'On_Off_State'], ['db_007', 'tnsping_result_time']]
+25157 platform-index (25135) 1609835073343
+25158 trace 1609835073343
+28955 trace (28932) 1609835272000
+28956 platform-index 1609835272000
+28956 platform-index (28932) 1609835160000
+28957 business-index 1609835160000
+28957 business-index (28932) 1609835273000
+28958 platform-index 1609835273000
+== Running Anomaly Detection (1609835328000/1609835267000) ==
+db check with host of shape (8791, 6)
+most recent timestamp of trace_df 2021-01-05 08:24:37.220000 (1609835077.22)
+tmsp = 2021-01-05 07:54:37.220000
+host check with traces of shape (28704, 10) (trace_df is of shape (28704, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835267000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', None], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['db_009', 'Proc_User_Used_Pct'], ['db_009', 'Proc_Used_Pct'], ['db_009', 'Sess_Connect'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+29029 platform-index (29003) 1609835076911
+29030 trace 1609835076911
+32833 trace (32806) 1609835345000
+32834 platform-index 1609835345000
+32834 platform-index (32806) 1609835220000
+32835 business-index 1609835220000
+32836 business-index (32807) 1609835106558
+32837 trace 1609835106558
+36625 trace (36595) 1609835346000
+36626 platform-index 1609835346000
+== Running Anomaly Detection (1609835389000/1609835328000) ==
+db check with host of shape (10515, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:11.270000 (1609835111.27)
+tmsp = 2021-01-05 07:55:11.270000
+host check with traces of shape (36297, 10) (trace_df is of shape (36297, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835328000
+/!\ SUBMITTING: [['docker_003', 'container_cpu_used'], ['docker_007', None], ['docker_002', 'container_cpu_used'], ['docker_001', 'container_cpu_used'], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'On_Off_State'], ['db_007', 'tnsping_result_time']]
+36712 platform-index (36681) 1609835110767
+36713 trace 1609835110767
+40497 trace (40465) 1609835340000
+40498 business-index 1609835340000
+== Running Anomaly Detection (1609835460000/1609835389000) ==
+db check with host of shape (11378, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:14.275000 (1609835114.275)
+tmsp = 2021-01-05 07:55:14.275000
+host check with traces of shape (40082, 10) (trace_df is of shape (40082, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835389000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', 'container_cpu_used'], ['docker_001', 'container_cpu_used'], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'On_Off_State'], ['db_007', 'tnsping_result_time']]
+40500 business-index (40467) 1609835113940
+40501 trace 1609835113940
+44296 trace (44262) 1609835433000
+44297 platform-index 1609835433000
+== Running Anomaly Detection (1609835521000/1609835460000) ==
+db check with host of shape (14468, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:18.298000 (1609835118.298)
+tmsp = 2021-01-05 07:55:18.298000
+host check with traces of shape (43878, 10) (trace_df is of shape (43878, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835460000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', 'container_cpu_used'], ['docker_001', None], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+== Running Anomaly Detection (1609835582000/1609835521000) ==
+db check with host of shape (16074, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:18.298000 (1609835118.298)
+tmsp = 2021-01-05 07:55:18.298000
+host check with traces of shape (43878, 10) (trace_df is of shape (43878, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835521000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', 'container_cpu_used'], ['docker_001', 'container_cpu_used'], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+== Running Anomaly Detection (1609835643000/1609835582000) ==
+db check with host of shape (16909, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:18.298000 (1609835118.298)
+tmsp = 2021-01-05 07:55:18.298000
+host check with traces of shape (43878, 10) (trace_df is of shape (43878, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835582000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', 'container_cpu_used'], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'Proc_User_Used_Pct'], ['db_009', 'Proc_Used_Pct'], ['db_009', 'Sess_Connect'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+44508 platform-index (44473) 1609835117591
+44509 trace 1609835117591
+48298 trace (48262) 1609835520000
+48299 business-index 1609835520000
+48302 business-index (48265) 1609835645000
+48303 platform-index 1609835645000
+== Running Anomaly Detection (1609835704000/1609835643000) ==
+db check with host of shape (16961, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:23.270000 (1609835123.27)
+tmsp = 2021-01-05 07:55:23.270000
+host check with traces of shape (47668, 10) (trace_df is of shape (47668, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835643000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', 'container_cpu_used'], ['docker_001', 'container_cpu_used'], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+== Running Anomaly Detection (1609835765000/1609835704000) ==
+db check with host of shape (16967, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:23.270000 (1609835123.27)
+tmsp = 2021-01-05 07:55:23.270000
+host check with traces of shape (47668, 10) (trace_df is of shape (47668, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835704000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', 'container_cpu_used'], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'Proc_User_Used_Pct'], ['db_009', 'Proc_Used_Pct'], ['db_009', 'Sess_Connect'], ['db_007', 'On_Off_State'], ['db_007', 'tnsping_result_time']]
+== Running Anomaly Detection (1609835826000/1609835765000) ==
+db check with host of shape (16925, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:23.270000 (1609835123.27)
+tmsp = 2021-01-05 07:55:23.270000
+host check with traces of shape (47668, 10) (trace_df is of shape (47668, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835765000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', None], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'Proc_User_Used_Pct'], ['db_009', 'Proc_Used_Pct'], ['db_009', 'Sess_Connect'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+== Running Anomaly Detection (1609835887000/1609835826000) ==
+db check with host of shape (16924, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:23.270000 (1609835123.27)
+tmsp = 2021-01-05 07:55:23.270000
+host check with traces of shape (47668, 10) (trace_df is of shape (47668, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835826000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', None], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+48555 platform-index (48517) 1609835122749
+48556 trace 1609835122749
+52343 trace (52304) 1609835898000
+52344 platform-index 1609835898000
+52346 platform-index (52306) 1609835760000
+52347 business-index 1609835760000
+52348 business-index (52307) 1609835901000
+52349 platform-index 1609835901000
+== Running Anomaly Detection (1609835948000/1609835887000) ==
+db check with host of shape (16930, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:30.220000 (1609835130.22)
+tmsp = 2021-01-05 07:55:30.220000
+host check with traces of shape (51456, 10) (trace_df is of shape (51456, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835887000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', 'container_cpu_used'], ['db_003', 'On_Off_State'], ['db_003', 'tnsping_result_time'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'Proc_User_Used_Pct'], ['db_009', 'Proc_Used_Pct'], ['db_009', 'Sess_Connect'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+== Running Anomaly Detection (1609836009000/1609835948000) ==
+db check with host of shape (16985, 6)
+most recent timestamp of trace_df 2021-01-05 08:25:30.220000 (1609835130.22)
+tmsp = 2021-01-05 07:55:30.220000
+host check with traces of shape (51456, 10) (trace_df is of shape (51456, 10))
+['docker_003', 'docker_007', 'docker_002', 'docker_001', 'db_003', 'os_022', 'os_021', 'docker_006', 'docker_005', 'db_009', 'db_007']
+Examining docker_003
+Examining docker_007
+Examining docker_002
+Examining docker_001
+Examining db_003
+Examining os_022
+Examining os_021
+Examining docker_006
+Examining docker_005
+Examining db_009
+Examining db_007
+Anomaly detected at the following timestamp 1609835948000
+/!\ SUBMITTING: [['docker_003', None], ['docker_007', None], ['docker_002', None], ['docker_001', None], ['db_003', 'Proc_User_Used_Pct'], ['db_003', 'Proc_Used_Pct'], ['db_003', 'Sess_Connect'], ['os_022', 'Sent_queue'], ['os_022', 'Received_queue'], ['os_021', 'Sent_queue'], ['os_021', 'Received_queue'], ['docker_006', 'container_cpu_used'], ['docker_005', None], ['db_009', 'On_Off_State'], ['db_009', 'tnsping_result_time'], ['db_007', 'Proc_User_Used_Pct'], ['db_007', 'Proc_Used_Pct'], ['db_007', 'Sess_Connect']]
+52489 platform-index (52447) 1609835129587
+52490 trace 1609835129587
+56286 trace (56243) 1609835880000
+56287 business-index 1609835880000
+56288 business-index (56244) 1609836042000
+56289 platform-index 1609836042000
+56290 platform-index (56245) 1609835135541
+56291 trace 1609835135541s
