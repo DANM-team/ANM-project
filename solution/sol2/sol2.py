@@ -218,7 +218,7 @@ def main():
             if msg_count > 1:
                 print(f"{i-1} {last_message} (+{msg_count}) {timestamp}")
             print(i, message.topic, timestamp)
-            trace_msg_count = 0
+            msg_count = 0
             last_message = message.topic            
 
         # append data to detector
