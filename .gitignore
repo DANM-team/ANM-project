@@ -17,3 +17,6 @@ report/report.aux
 report/report.fdb_latexmk
 report/report.log
 report/report.out
+
+data/
+kafka/
