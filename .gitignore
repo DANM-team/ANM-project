@@ -4,3 +4,6 @@ temp/
 
 # ssh keys
 /tencent cloud vm/ 
+
+*.pkl
+*.zip
